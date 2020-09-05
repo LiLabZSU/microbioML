@@ -1,56 +1,56 @@
-# Î¢ÉúÎï×éÊı¾İµÄ»úÆ÷Ñ§Ï°´úÂë
+# å¾®ç”Ÿç‰©ç»„æ•°æ®çš„æœºå™¨å­¦ä¹ ä»£ç 
 
-#°²×°Ïà¹ØR°ü
+#å®‰è£…ç›¸å…³RåŒ…
 install.packages("tidyverse")
 install.packages("randomForest")
 install.packages("pROC")
 
 
-#ÔØÈëÊı¾İ
-setwd("D:\\LILAB\\microbiomeML") #Êı¾İËùÔÚÂ·¾¶,°´Êı¾İÊµ¼ÊÂ·¾¶ĞŞ¸Ä
-data <- read.csv("S1_table.csv", header=TRUE, row.names=1,sep=",")  #ÎÄÏ×¸½¼ş1µÄOTU±íÊı¾İ
-head(data) #ÏÔÊ¾²¿·ÖÊı¾İ
+#è½½å…¥æ•°æ®
+setwd("D:\\LILAB\\microbioML") #æ•°æ®æ‰€åœ¨è·¯å¾„,æŒ‰æ•°æ®å®é™…è·¯å¾„ä¿®æ”¹
+data <- read.csv("S1_table.csv", header=TRUE, row.names=1,sep=",")  #æ–‡çŒ®é™„ä»¶1çš„OTUè¡¨æ•°æ®
+head(data) #æ˜¾ç¤ºéƒ¨åˆ†æ•°æ®
 #data$Malodour <- factor(ifelse(data$Malodour == "N", 1, 2))
 
-#Êı¾İ·ÖÕÛ(k-fold)
+#æ•°æ®åˆ†æŠ˜(k-fold)
 CVgroup <- function(k, datasize, seed){
   cvlist <- data.frame()
   set.seed(seed)
-  n <- rep(1:k, ceiling(datasize/k))[1:datasize] #½«Êı¾İ·Ö³Ék·İ£¬²¢Éú³ÉµÄÍêÕûÊı¾İ¼¯n
-  temp <- sample(n, datasize) #Ëæ»ú»¯
+  n <- rep(1:k, ceiling(datasize/k))[1:datasize] #å°†æ•°æ®åˆ†æˆkä»½ï¼Œå¹¶ç”Ÿæˆçš„å®Œæ•´æ•°æ®é›†n
+  temp <- sample(n, datasize) #éšæœºåŒ–
   x <- 1:k
   dataseq <- 1:datasize
-  cvlist <- lapply(x, function(x) dataseq[temp == x])#dataseqÖĞËæ»úÉú³Ék¸öËæ»úÓĞĞòÊı¾İÁĞ
+  cvlist <- lapply(x, function(x) dataseq[temp == x])#dataseqä¸­éšæœºç”Ÿæˆkä¸ªéšæœºæœ‰åºæ•°æ®åˆ—
   return(cvlist)
-}#¶¨Òå·ÖÕÛº¯Êı
+}#å®šä¹‰åˆ†æŠ˜å‡½æ•°
 
 k <- 10    # k-fold
-datasize <- 90	#Ñù±¾Êı
-cvlist <- CVgroup(k = k, datasize = datasize, seed = 123) #´úÈë²ÎÊı
+datasize <- 90	#æ ·æœ¬æ•°
+cvlist <- CVgroup(k = k, datasize = datasize, seed = 123) #ä»£å…¥å‚æ•°
 
-#ÔØÈëÄ£ĞÍ¿â
+#è½½å…¥æ¨¡å‹åº“
 library(randomForest)
 
-pred <- data.frame()#´æ´¢Ô¤²â½á¹û
+pred <- data.frame()#å­˜å‚¨é¢„æµ‹ç»“æœ
 
 for (i in 1:10) {
-  train <- data[-cvlist[[i]], ] #ÑµÁ·¼¯
-  test <- data[cvlist[[i]], ] #²âÊÔ¼¯
+  train <- data[-cvlist[[i]], ] #è®­ç»ƒé›†
+  test <- data[cvlist[[i]], ] #æµ‹è¯•é›†
    
-  #Ëæ»úÉ­ÁÖ
-  rf.model <- randomForest(Malodour ~ ., data = train, ntree=100) #½¨Á¢randomforestÄ£ĞÍ£¬ntreeÖ¸¶¨Ê÷Êı
+  #éšæœºæ£®æ—
+  rf.model <- randomForest(Malodour ~ ., data = train, ntree=100) #å»ºç«‹randomforestæ¨¡å‹ï¼ŒntreeæŒ‡å®šæ ‘æ•°
   summary(rf.model)
-  rf.pred <- predict(rf.model, test, type = "prob")[,2] #Ô¤²â
-  kcross <- rep(i, length(rf.pred))	#iµÚ¼¸´ÎÑ­»·½»²æ£¬¹²K´Î
+  rf.pred <- predict(rf.model, test, type = "prob")[,2] #é¢„æµ‹
+  kcross <- rep(i, length(rf.pred))	#iç¬¬å‡ æ¬¡å¾ªç¯äº¤å‰ï¼Œå…±Kæ¬¡
   temp <- cbind(Malodour = test$Malodour, Predict = as.data.frame(rf.pred)[,1], kcross)
   pred <- rbind(pred, temp)
 
-}#Ñ­»·¼ÆËãK´ÎÄ£ĞÍ
+}#å¾ªç¯è®¡ç®—Kæ¬¡æ¨¡å‹
 
 head(pred)
 
 
-#»æÖÆROCÇúÏß
+#ç»˜åˆ¶ROCæ›²çº¿
 library(pROC)
 library(ggplot2)
 rf.roc <- roc(pred$Malodour, as.numeric(pred$rf.pred))
