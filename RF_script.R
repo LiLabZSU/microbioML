@@ -1,4 +1,5 @@
-# 微生物组数据的机器学习代码
+# 微生物组数据的机器学习方法
+# https://github.com/LiLabZJGSU/microbioML
 
 #安装相关R包
 install.packages("tidyverse")
@@ -10,6 +11,7 @@ install.packages("pROC")
 setwd("D:\\LILAB\\microbioML") #数据所在路径,按数据实际路径修改
 data <- read.csv("S1_table.csv", header=TRUE, row.names=1,sep=",")  #文献附件1的OTU表数据
 head(data) #显示部分数据
+#数据是属水平的微生物物种或OTU丰度矩阵，其中行为样本ID，列为OTU或物种名，以及第一列为样本性状，用于分组
 #data$Malodour <- factor(ifelse(data$Malodour == "N", 1, 2))
 
 #数据分折(k-fold)
@@ -37,8 +39,8 @@ for (i in 1:10) {
   train <- data[-cvlist[[i]], ] #训练集
   test <- data[cvlist[[i]], ] #测试集
    
-  #随机森林
-  rf.model <- randomForest(Malodour ~ ., data = train, ntree=100) #建立randomforest模型，ntree指定树数
+  #建立随机森林模型
+  rf.model <- randomForest(Malodour ~ ., data = train, ntree=100) #Malodour为分类变量，ntree指定决策树数目
   summary(rf.model)
   rf.pred <- predict(rf.model, test, type = "prob")[,2] #预测
   kcross <- rep(i, length(rf.pred))	#i第几次循环交叉，共K次
@@ -53,15 +55,9 @@ head(pred)
 #绘制ROC曲线
 library(pROC)
 library(ggplot2)
-rf.roc <- roc(pred$Malodour, as.numeric(pred$rf.pred))
+rf.roc <- roc(pred$Malodour, as.numeric(pred$Predict))
 rf.roc$auc
 
 #plot(roc2)
 ggroc(rf.roc, alpha=0.5, colour="red", linetype=1, size=2 ,legacy.axes = TRUE) +
 	annotate("text", x = .75, y = .15, label = paste("AUC of RandomForest =", round(rf.roc$auc,2)))
-
-
-
-   
-
-
