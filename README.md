@@ -1,2 +1,2 @@
 # microbioML
-Machine Learning Methods for Microbiome Studies
+Machine Learning Methods for Microbiome-based Diagnostics
